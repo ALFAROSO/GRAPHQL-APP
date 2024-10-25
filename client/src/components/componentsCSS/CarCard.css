@@ -1,0 +1,11 @@
+.icon-container {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 10px;
+}
+
+.icon-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
