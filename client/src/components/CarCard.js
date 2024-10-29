@@ -5,7 +5,7 @@ import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import './componentsCSS/CarCard.css';
 
 const UPDATE_CAR = gql`
-  mutation UpdateCar($id: ID!, $year: Int!, $make: String!, $model: String!, $price: Float!) {
+  mutation UpdateCar($id: ID!, $year: String!, $make: String!, $model: String!, $price: String!) {
     updateCar(id: $id, year: $year, make: $make, model: $model, price: $price) {
       id
       year
@@ -104,7 +104,7 @@ const CarCard = ({ car }) => {
           <input
             type="number"
             value={year}
-            onChange={e => setYear(parseInt(e.target.value))}
+            onChange={e => setYear(e.target.value)}
           />
           <br />
           <label>Make:</label>
@@ -125,7 +125,7 @@ const CarCard = ({ car }) => {
           <input
             type="number"
             value={price}
-            onChange={e => setPrice(parseFloat(e.target.value))}
+            onChange={e => setPrice(e.target.value)}
           />
           <br />
           <Button onClick={handleSave}>Save</Button>
