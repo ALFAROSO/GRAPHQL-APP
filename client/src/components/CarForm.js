@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
-import { Input, Button, Select } from 'antd';
+import { Input, Button, Select, message } from 'antd';
 import './componentsCSS/CarFormCSS.css';
 
 const ADD_CAR = gql`
-  mutation AddCar($year: Int!, $make: String!, $model: String!, $price: Float!, $personId: ID!) {
+  mutation AddCar($year: String!, $make: String!, $model: String!, $price: String!, $personId: ID!) {
     addCar(year: $year, make: $make, model: $model, price: $price, personId: $personId) {
       id
       year
@@ -40,33 +40,45 @@ const CarForm = ({ people }) => {
   const [price, setPrice] = useState('');
   const [personId, setPersonId] = useState('');
   const [addCar] = useMutation(ADD_CAR, {
+    onError: (error) => {
+      message.error(`Error: ${error.message}`);
+    },
+    onCompleted: () => {
+      message.success('Car added successfully');
+    },
     optimisticResponse: {
       addCar: {
         __typename: "Car",
         id: Math.floor(Math.random() * 10000).toString(), // Temporary ID
-        year: parseInt(year),
+        // year: parseInt(year),
+        year,
         make,
         model,
-        price: parseFloat(price),
-        personId
-      }
+        // price: parseFloat(price),
+        price,
+        personId,
+      },
     },
-    update(cache, { data: { addCar } }) {
+    update: (cache, { data: { addCar } }) => {
       const { people } = cache.readQuery({ query: GET_PEOPLE });
-      const updatedPeople = people.map(person =>
-        person.id === addCar.personId
-          ? { ...person, cars: [...person.cars, addCar] }
-          : person
-      );
+      const updatedPeople = people.map(person => {
+        if (person.id === addCar.personId) {
+          return {
+            ...person,
+            cars: [...person.cars, addCar],
+          };
+        }
+        return person;
+      });
       cache.writeQuery({
         query: GET_PEOPLE,
         data: { people: updatedPeople },
       });
-    }
+    },
   });
 
   const handleSubmit = () => {
-    addCar({ variables: { year: parseInt(year), make, model, price: parseFloat(price), personId } });
+    addCar({ variables: { year, make, model, price, personId } });
     setYear('');
     setMake('');
     setModel('');
@@ -83,7 +95,7 @@ const CarForm = ({ people }) => {
       </div>
       <div className="form-container">
         <div className="form-item">
-          <label className="required">Year:</label>
+          <label>Year:</label>
           <Input
             value={year}
             onChange={e => setYear(e.target.value)}
@@ -91,7 +103,7 @@ const CarForm = ({ people }) => {
           />
         </div>
         <div className="form-item">
-          <label className="required">Make:</label>
+          <label>Make:</label>
           <Input
             value={make}
             onChange={e => setMake(e.target.value)}
@@ -99,7 +111,7 @@ const CarForm = ({ people }) => {
           />
         </div>
         <div className="form-item">
-          <label className="required">Model:</label>
+          <label>Model:</label>
           <Input
             value={model}
             onChange={e => setModel(e.target.value)}
@@ -107,15 +119,15 @@ const CarForm = ({ people }) => {
           />
         </div>
         <div className="form-item">
-          <label className="required">Price</label>
+          <label>Price:</label>
           <Input
             value={price}
             onChange={e => setPrice(e.target.value)}
-            placeholder="$"
+            placeholder="Price"
           />
         </div>
         <div className="form-item">
-          <label className="required">Person:</label>
+          <label>Person:</label>
           <Select
             value={personId}
             onChange={value => setPersonId(value)}
@@ -129,8 +141,8 @@ const CarForm = ({ people }) => {
             ))}
           </Select>
         </div>
-        <Button
-          onClick={handleSubmit}
+        <Button 
+          onClick={handleSubmit} 
           disabled={!year || !make || !model || !price || !personId}
         >
           Add Car
